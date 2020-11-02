@@ -1,6 +1,6 @@
 # BorrowerService
 
-- port 8090
+port 8090
 
 - - - -
 
