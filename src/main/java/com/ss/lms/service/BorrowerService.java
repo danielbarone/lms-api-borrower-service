@@ -94,7 +94,20 @@ public class BorrowerService {
       }
     }
 		return books;
-	}
+  }
+  
+  private boolean adjustBookCopies(Branch branch, Book book, Integer adjustment) {
+    try {
+      List<BookCopies> bookCopies = branchRepo.getNoOfCopies(branch.getBranchId(), book.getBookId());
+      Integer currNoCopies = bookCopies.get(0).getNoOfCopies();
+      branchRepo.updateNoOfCopies(branch.getBranchId(), book.getBookId(), currNoCopies + adjustment);
+      return true;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return false;
+    }
+
+  }
 
   @RequestMapping(value = "/checkoutBook", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
 	public Loan checkoutBook(@RequestBody BorrowBookRequest borrowBookRequest) {
@@ -119,9 +132,19 @@ public class BorrowerService {
     loan.setDueDate(dueDate);
     loan.setDateIn(null);
 
-    lrepo.save(loan);
-
-	  return loan;
+    try {
+      BookCopies bookCopies = branchRepo.getNoOfCopies(branch.getBranchId(), book.getBookId()).get(0);
+      if (bookCopies.getNoOfCopies() > 0) {
+        lrepo.save(loan);
+        adjustBookCopies(branch, book, -1);
+        return loan;
+      } else {
+        System.out.println("Error: No more copies of this book.");
+        return null;
+      }
+    } catch (Exception e) {
+      return null;
+    }
   }
   
   @RequestMapping(value = "/returnBook", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
@@ -130,17 +153,24 @@ public class BorrowerService {
 		Book book = borrowBookRequest.getBook();
 		Integer cardNo = borrowBookRequest.getCardNo();
 
-		List<Loan> loans = branchRepo.getLoan(branch.getBranchId(), book.getBookId(), cardNo);
-		Loan loan = loans.get(0);
-
     Date date = new Date();
     Timestamp dateIn = new Timestamp(date.getTime());
 
-		loan.setDateIn(dateIn);
-
-		branchRepo.returnBook(branch.getBranchId(), book.getBookId(), cardNo, dateIn);
-
-		return loan;
+    try {
+      List<Loan> loans = branchRepo.getLoan(branch.getBranchId(), book.getBookId(), cardNo);
+      Loan loan = loans.get(0);
+      if (loan.getDateIn() != null) {
+        System.out.println("Error: Book already returned");
+        return null;
+      }
+      branchRepo.returnBook(branch.getBranchId(), book.getBookId(), cardNo, dateIn);
+      adjustBookCopies(branch, book, 1);
+      loan.setDateIn(dateIn);
+      return loan;
+      
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
 	}
-
 }
