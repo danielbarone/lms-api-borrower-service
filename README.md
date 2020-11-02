@@ -4,7 +4,11 @@
 
 ### /getBranches [GET]
 
+- - - -
+
 ### /getBooksByBranch?{branchId} [GET]
+
+- - - -
 
 ### /checkoutBook [POST]
 
@@ -21,6 +25,8 @@
   "cardNo": {cardNo}
 }
 ```
+
+- - - -
 
 ### /returnBook [POST]
 
