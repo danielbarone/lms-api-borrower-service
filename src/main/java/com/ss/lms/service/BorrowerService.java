@@ -144,6 +144,7 @@ public class BorrowerService {
         return new ResponseEntity<>("Error: No more copies of this book.", HttpStatus.BAD_REQUEST);
       }
     } catch (Exception e) {
+      e.printStackTrace();
       return new ResponseEntity<>("Checkout failed", HttpStatus.BAD_REQUEST);
     }
   }
