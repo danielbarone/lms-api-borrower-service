@@ -2,11 +2,13 @@
 
 - port 8090
 
-## GET /getBranches
+### /getBranches [GET]
 
-## GET /getBooksByBranch?{branchId}
+### /getBooksByBranch?{branchId} [GET]
 
-## POST /checkoutBook
+### /checkoutBook [POST]
+
+#### Request body:
 
 ```
 {
@@ -20,7 +22,9 @@
 }
 ```
 
-## POST /returnBook
+### /returnBook [POST]
+
+#### Request body:
 
 ```
 {
