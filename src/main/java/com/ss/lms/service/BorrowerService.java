@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -110,7 +112,7 @@ public class BorrowerService {
   }
 
   @RequestMapping(value = "/checkoutBook", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
-	public Loan checkoutBook(@RequestBody BorrowBookRequest borrowBookRequest) {
+	public ResponseEntity<?> checkoutBook(@RequestBody BorrowBookRequest borrowBookRequest) {
     Branch branch = borrowBookRequest.getBranch();
 		Book book = borrowBookRequest.getBook();
     Integer cardNo = borrowBookRequest.getCardNo();
@@ -137,18 +139,17 @@ public class BorrowerService {
       if (bookCopies.getNoOfCopies() > 0) {
         lrepo.save(loan);
         adjustBookCopies(branch, book, -1);
-        return loan;
+        return new ResponseEntity<>(loan, HttpStatus.OK);
       } else {
-        System.out.println("Error: No more copies of this book.");
-        return null;
+        return new ResponseEntity<>("Error: No more copies of this book.", HttpStatus.BAD_REQUEST);
       }
     } catch (Exception e) {
-      return null;
+      return new ResponseEntity<>("Checkout failed", HttpStatus.BAD_REQUEST);
     }
   }
   
   @RequestMapping(value = "/returnBook", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
-	public Loan returnBook(@RequestBody BorrowBookRequest borrowBookRequest) {
+	public ResponseEntity<?> returnBook(@RequestBody BorrowBookRequest borrowBookRequest) {
 		Branch branch = borrowBookRequest.getBranch();
 		Book book = borrowBookRequest.getBook();
 		Integer cardNo = borrowBookRequest.getCardNo();
@@ -160,17 +161,16 @@ public class BorrowerService {
       List<Loan> loans = branchRepo.getLoan(branch.getBranchId(), book.getBookId(), cardNo);
       Loan loan = loans.get(0);
       if (loan.getDateIn() != null) {
-        System.out.println("Error: Book already returned");
-        return null;
+        return new ResponseEntity<>("Error: Book already returned.", HttpStatus.BAD_REQUEST);
       }
       branchRepo.returnBook(branch.getBranchId(), book.getBookId(), cardNo, dateIn);
       adjustBookCopies(branch, book, 1);
       loan.setDateIn(dateIn);
-      return loan;
+      return new ResponseEntity<>(loan, HttpStatus.OK);
       
     } catch (Exception e) {
       e.printStackTrace();
-      return null;
+      return new ResponseEntity<>("Return book failed.", HttpStatus.BAD_REQUEST);
     }
 	}
 }
