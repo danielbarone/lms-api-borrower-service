@@ -10,7 +10,7 @@ port 8090
 
 - - - -
 
-### /getBooksByBranch?{branchId}
+### /getBooksByBranch?branchId={branchId}
 
 - GET
 
